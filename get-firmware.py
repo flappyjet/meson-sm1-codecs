@@ -42,6 +42,8 @@ FILES = [
      STARFIVE + 'LICENSE.txt', None, 0, False),
     ('meson/vdec/g12a_h264.bin', '36426a1997896b20167f924008347cc6',
      LINUX_FW + 'g12a_h264.bin', None, 0, True),
+    ('meson/vdec/g12a_vp9.bin', '579d27c421b08c60a51f1759371732a1',
+     LINUX_FW + 'g12a_vp9.bin', None, 0, True),
     ('meson/vdec/sm1_vp9_mmu.bin', 'c90ec8043cb0c95c247bd9ea4de6d4d8',
      LINUX_FW + 'sm1_vp9_mmu.bin', None, 0, True),
 ]
@@ -100,6 +102,21 @@ def main():
         os.chmod(target + '.tmp', 0o644)
         os.replace(target + '.tmp', target)
         print(f'installed  {path}')
+
+    # the G12A/B asks for the multi HEVC ucode by its G12A name, while the only
+    # blob that exists is the SM1 one. Alias -> real file, created after install.
+    ALIASES = [
+        ('meson/vdec/g12a_hevc_mmu_multi.bin', 'meson/vdec/sm1_hevc_mmu_multi.bin'),
+    ]
+    for alias, real in ALIASES:
+        link = os.path.join(dest, alias)
+        target = os.path.join(dest, real)
+        if os.path.lexists(link):
+            os.unlink(link)
+        if os.path.exists(target):
+            os.symlink(target, link)
+            print(f'installed {alias} => {real}')
+
     return 1 if failed else 0
 
 
